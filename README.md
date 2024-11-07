@@ -1,1 +1,74 @@
 # Assignment
+//User Controller
+// use password js for authentication
+// last question needs to be done seperately
+1. create an api for signup for user
+firstname,last name,email,phone number,password
+2. create an api for login using email and pass, and phone number and pass.(user can login after approved by admin ).
+
+
+using jwt Token for authorization
+3. create an api for geting data bw 2 collections using aggrigate(bw product and user)
+4. user create an order for product if product is in stock
+
+
+note- product shows to users according to his location(10 km).
+
+//Admin Controller
+5. create an api for admin login and after login admin can see userList where admin can Block/Active/Delete , approved and reject user
+admin can search the data according to firstname ,email,phoneNumber in userList.
+
+6. admin has access to product management
+admin can add multiple hub/warehouse
+ in admin panel where admin add products in stock for warehouse,
+
+(admin has to be access accepet or reject the order)
+admin get the notification if any product is going to be out of stock
+
+7. Sum up quantity having same price and same option (attempts in java script)
+let data = [
+  {
+    price:20,
+    quantity : 25,
+ option :"yes"
+  },
+  {
+    price:12,
+    quantity : 25,
+ option :"yes"
+  },
+  {
+    price:20,
+    quantity : 25,
+    option :"yes"
+  },
+  {
+    price:15,
+    quantity : 25,
+    option :"yes"
+  },
+  {
+    price:15,
+    quantity : 5,
+    option :"yes"
+  }
+]
+
+O/P
+[
+{
+  Price:20,
+    quantity : 50,
+    option :”yes”
+},
+{
+  Price:12,
+    quantity : 25,
+    option :”yes”
+},
+{
+  price:15,
+    quantity : 30,
+    option :”yes”
+}
+]
