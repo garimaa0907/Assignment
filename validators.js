@@ -23,5 +23,4 @@ const validEmail=function(email){
 }
 
 
-
 module.exports={validName,isValid,validPhone,validEmail}

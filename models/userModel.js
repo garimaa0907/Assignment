@@ -30,6 +30,7 @@ const userSchema = new mongoose.Schema({
     },
     status: {
         type : String,
+        enum: ['approve', 'reject', 'block', 'active', 'delete', 'pending'], // Enum values
     },
     role: {
         type: String

@@ -29,7 +29,7 @@ let data = [
   ]
 
   function quesSolve(data){
-  const resultMap = new Map();
+  const resultMap = new Map();   // declared a Map 
 
   data.forEach(item => {
     const key = `${item.price}-${item.option}`;

@@ -2,24 +2,28 @@ const userModel = require("../models/userModel");
 const mongoose = require("mongoose");
 const productModel = require('../models/productModel')
 const WareHouseModel = require('../models/wareHouseModel')
+const orderModel = require('../models/orderModel')
+const { isValid } = require('../validators')
 
 const AdminLogin = async (req, res) => {
+  // function associated with admin login
   try {
-    const { email, phoneNumber, password } = req.body;
-    const user = await userModel.findOne({ $or: [{ email }, { phoneNumber }] });
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch)
-      return res.status(400).json({ message: "Invalid credentials" });
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
-    res.json({ token });
+    const check = await userModel.findOne({ $or: [{ email }, { phoneNumber }] });
+    if (!check) return res.status(400).send({ status: false, message: "Please provide correct credentials" }) // here check if the user is not present for the given credentials 
+
+    const passCompare = await bcrypt.compare(password, check.password)     // brcypt compare is used for password matching
+    if (!passCompare) return res.status(400).send({ status: false, message: "please provide correct credentials" })
+    else { // token is generated
+        const token = jwt.sign({ userId: check._id.toString(), password: password }, "Secret key", { expiresIn: "5hr" })
+        return res.status(200).send({ status: true, message: "User Login Successfull", data: { userId: check._id, token: token } })
+    }
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 };
 
 const userList = async (req, res) => {
+  // user list api is for admin
   try {
     const { firstName, lastName, email, phoneNumber } = req.query;
 
@@ -40,7 +44,7 @@ const userList = async (req, res) => {
     }
 
     // Find users with the specified filter
-    const users = await userModel.find(filter).select("password"); 
+    const users = await userModel.find(filter).select("-password"); 
 
     // Check if any users were found
     if (!users.length) {
@@ -52,6 +56,7 @@ const userList = async (req, res) => {
         status: true,
         message: "Users retrieved successfully",
         data: users,
+        count: users.length
       });
   } catch (error) {
     return res.status(500).send({ status: false, message: error.message });
@@ -59,6 +64,7 @@ const userList = async (req, res) => {
 };
 
 const statusUpdateByAdmin = async (req, res) => {
+  // this function is for status update of user by admin only
   try {
      await userModel.updateOne(
       { _id: new mongoose.Types.ObjectId(req.body.userId) },
@@ -76,9 +82,10 @@ const statusUpdateByAdmin = async (req, res) => {
 };
 
 const approveAndRejectOrder = async (req, res) => {
+    // this function is for order approve and reject by admin only
     try {
-       await userModel.updateOne(
-        { _id: new mongoose.Types.ObjectId(req.body.userId) },
+       await orderModel.updateOne(
+        { _id: new mongoose.Types.ObjectId(req.body.orderId) },
         { $set: { status: req.body.status } }
       );
       return res
@@ -86,7 +93,6 @@ const approveAndRejectOrder = async (req, res) => {
         .send({
           status: true,
           message: "Status Updated Successfully",
-          data: newOrder,
         });
     } catch (error) {
       return res.status(500).send({ status: false, message: error.message });
@@ -94,12 +100,13 @@ const approveAndRejectOrder = async (req, res) => {
   };
 
   const createOrder = async (req, res) => {
+    // This function is for creating the order according to the warehouse and the condition given
     try {
         const { userId, productIds } = req.body;
         let validProducts =[]
         for (const productId of productIds) {
             const product = await productModel.findById(productId);
-           const warehouse = await WareHouseModel.find({productIds:{$in : [productId] }})
+           const warehouse = await WareHouseModel.find({productIds:{$in : [new mongoose.Types.ObjectId(productId)] }}) // Check the distance through warehouse where product is stored
             if (!product) {
                 return res.status(404).send({ status: false, message: `Product with ID ${productId} not found` });
             }
@@ -112,7 +119,7 @@ const approveAndRejectOrder = async (req, res) => {
             }
 
             // Check if all warehouses for the product have a location greater than 10
-            const allOutOfRange = warehouse.every(warehouse => warehouse.location > 10);
+            const allOutOfRange = warehouse.every(warehouse => warehouse.location > 10);    // default taken 10 ; but dynamice value here can be taken through user also
             if (allOutOfRange) {
                 return res.status(400).send({ status: false, message: `Product with ID ${productId} is not within range` });
             }
@@ -137,6 +144,7 @@ const approveAndRejectOrder = async (req, res) => {
 }
 
 const createWarehouse = async (req, res) => {
+  // Function associated with wareHouse creation with the products given 
     try {
         let data = req.body
         let { name, productIds , location} = data
@@ -160,7 +168,6 @@ const createWarehouse = async (req, res) => {
             }
             validProducts.push(new mongoose.Types.ObjectId(productId));
         }
-        console.log(validProducts)
         let WareHouseCreated = await WareHouseModel.create({
             name :nameInLowerCase ,
             productIds :validProducts ,

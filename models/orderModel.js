@@ -15,7 +15,8 @@ userId: {
 },
 status: {
     type : String,
-    default: 'pending'
+    default: 'pending',
+    enum: ['approve', 'reject', 'pending'], // Enum values
 }
 
 },{ timestamps: true })
